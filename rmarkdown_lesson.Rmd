@@ -1,0 +1,32 @@
+---
+title: "Untitled Paper"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Introduction
+
+By _Darcy L. Peter_
+
+1. Abstract
+1. Introduction
+1. Methods
+1. Conclusion
+1. Discussion
+
+## Abstract
+Blah blah
+
+## Introduction
+Blah blah
+
+## Methods
+Blah blah
+
+
+
+  
