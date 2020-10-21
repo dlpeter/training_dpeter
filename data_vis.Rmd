@@ -1,0 +1,91 @@
+---
+title: "Data Visualization"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+library(leaflet)
+library(dplyr)
+library(scales)
+library(DT)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+data_url <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3Af119a05b-bbe7-4aea-93c6-85434dcb1c5e"
+
+esc <- tryCatch(
+    read.csv("data/escapement.csv", stringsAsFactors = FALSE),
+    error=function(cond) {
+        message(paste("Escapement file does not seem to exist, so get it from the KNB."))
+        esc <- read.csv(url(data_url, method = "libcurl"), stringsAsFactors = FALSE)
+        return(esc)
+    }
+)
+
+head(esc)
+```
+
+Total annual escapement by species and region
+
+```{r}
+annual_esc <- esc %>% 
+  separate(sampleDate, into = c("year", "month", "day"), sep = "-") %>% 
+  mutate(Year = as.numeric(year)) %>%
+    group_by(Species, SASAP.Region, Year) %>% 
+  summarise(total_count = sum(DailyCount), .groups = "drop") %>% 
+  filter(Species %in% c("Chinook", "Sockeye", "Chum", "Coho", "Pink"))
+```
+
+```{r}
+#chris's code
+
+str(annual_esc)
+```
+
+## PLOTTING
+
+```{r}
+ggplot(annual_esc, mapping =aes(x = Species, y = total_count, fill = SASAP.Region)) +
+  geom_col()
+```
+
+```{r}
+annual_esc %>% 
+  filter(SASAP.Region == "Kodiak") %>% 
+  ggplot(aes(x = Year, y = total_count, color = Species)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(labels = comma) +
+  labs(x = "Year", y = "Annual escapement (# fish)", title = "Kodiak Escapement") +
+  theme_classic() +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+ggplot(annual_esc, aes(x = Year, y = total_count, color = Species)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(labels = comma) +
+  facet_wrap(~SASAP.Region, ncol = 2, scales = "free_y") +
+  labs(x = "Year", y = "Annual escapement (# fish)", title = "Kodiak Salmon Escapement")
+```
+
+## Interactive Tables
+
+```{r}
+locations <- esc %>% 
+  distinct(Location, Latitude, Longitude) %>% 
+  drop_na()
+```
+
+```{r}
+datatable(locations)
+```
+
+
